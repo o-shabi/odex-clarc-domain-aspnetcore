@@ -27,6 +27,30 @@ The library focuses on:
 
 ---
 
+## 🚀 Getting Started
+
+### Prerequisites
+
+- .NET 6.0 or later (support for .NET Standard 2.1)
+- ASP.NET Core (for dependency injection integration)
+- Entity Framework Core (for repository implementations – not included)
+
+### Installation
+
+The library is published as a NuGet package (example – replace with actual feed):
+
+```bash
+dotnet add package Odex.AspNetCore.Clarc.Domain
+```
+
+Or use the Package Manager Console:
+
+```bash
+Install-Package Odex.AspNetCore.Clarc.Domain
+```
+
+---
+
 ## ✨ Features
 
 | Feature                  | Description                                                                                       |
@@ -117,28 +141,6 @@ await ExecuteInRepositoryTransactionAsync(async () =>
 ```
 
 ---
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- .NET 6.0 or later (support for .NET Standard 2.1)
-- ASP.NET Core (for dependency injection integration)
-- Entity Framework Core (for repository implementations – not included)
-
-### Installation
-
-The library is published as a NuGet package (example – replace with actual feed):
-
-```bash
-dotnet add package Odex.AspNetCore.Clarc.Domain
-```
-
-Or use the Package Manager Console:
-
-```bash
-Install-Package Odex.AspNetCore.Clarc.Domain
-```
 
 ### Basic Configuration (DI)
 
