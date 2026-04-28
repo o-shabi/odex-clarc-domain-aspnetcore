@@ -31,7 +31,7 @@ The library focuses on:
 
 ### Prerequisites
 
-- .NET 6.0 or later (support for .NET Standard 2.1)
+- .NET 9.0 or later
 - ASP.NET Core (for dependency injection integration)
 - Entity Framework Core (for repository implementations – not included)
 
