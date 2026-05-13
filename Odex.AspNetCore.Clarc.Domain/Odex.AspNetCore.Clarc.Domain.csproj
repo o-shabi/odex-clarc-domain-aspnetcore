@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <RootNamespace>Odex.AspNetCore.Clarc.Domain</RootNamespace>
+        <AssemblyName>Odex.AspNetCore.Clarc.Domain</AssemblyName>
+
+        <PackageId>Odex.AspNetCore.Clarc.Domain</PackageId>
+        <Version>0.2.0</Version>
+        <Title>Odex CLARC — Domain</Title>
+        <Authors>Asen O'Shabi</Authors>
+        <Company>O'Shabi</Company>
+        <Copyright>Copyright © Asen O'Shabi</Copyright>
+        <Description>DDD-oriented domain primitives and abstractions for any .NET stack (framework-agnostic).</Description>
+        <PackageTags>ddd;clean-architecture;aggregates;specification;domain-events;clarc;dotnet</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+        <PackageProjectUrl>https://github.com/o-shabi/odex-clarc-domain-aspnetcore</PackageProjectUrl>
+        <PackageReleaseNotes>https://github.com/o-shabi/odex-clarc-domain-aspnetcore/blob/main/CHANGELOG.md</PackageReleaseNotes>
+        <RepositoryUrl>https://github.com/o-shabi/odex-clarc-domain-aspnetcore.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
+
+</Project>

@@ -1,217 +1,240 @@
-# 🧱 Odex.AspNetCore.Clarc.Domain
+# Odex.AspNetCore.Clarc.Domain
 
-[![NuGet Version](https://img.shields.io/nuget/v/Odex.AspNetCore.Clarc.Domain)](https://www.nuget.org/packages/Odex.AspNetCore.Clarc.Domain)
+[![NuGet](https://img.shields.io/nuget/v/Odex.AspNetCore.Clarc.Domain)](https://www.nuget.org/packages/Odex.AspNetCore.Clarc.Domain)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Odex.AspNetCore.Clarc.Domain)](https://www.nuget.org/packages/Odex.AspNetCore.Clarc.Domain)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/o-shabi/odex-clarc-domain-aspnetcore/actions/workflows/ci.yml/badge.svg)](https://github.com/o-shabi/odex-clarc-domain-aspnetcore/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**A robust DDD foundation library for ASP.NET Core applications**  
-*Build clean, maintainable domain layers with aggregates, specifications, policies, and CQRS‑ready building blocks.*
-
----
-
-## 📦 Overview
-
-`Odex.AspNetCore.Clarc.Domain` provides a set of base classes, interfaces, and utilities that implement common *
-*Domain‑Driven Design** (DDD) patterns. It is designed to reduce boilerplate code while encouraging consistency,
-testability, and separation of concerns.
-
-The library focuses on:
-
-- **Aggregates & Entities** – Base classes for root aggregates and stateful entities.
-- **Domain Events** – Lightweight event recording and dispatching support.
-- **Specifications** – Reusable, composable query logic.
-- **Policies** – Guard clauses and invariant validation.
-- **Repository Abstractions** – Async CRUD operations with transactions.
-- **Transactional Context** – Explicit rollback and commit control.
-- **Value Objects** – Immutable data containers.
+Reusable **domain-layer** building blocks for **.NET**: aggregates, domain events, specifications, guard policies, persistence-oriented repository contracts, and transaction abstractions. The **public API is fully documented** with XML comments for IntelliSense and NuGet. **No ASP.NET Core or EF Core dependency**—this assembly targets plain `net9.0` so you can use it from any host or stack.
 
 ---
 
-## 🚀 Getting Started
+## Table of contents
 
-### Prerequisites
+- [About](#about)
+- [Installation](#installation)
+- [Requirements](#requirements)
+- [How it fits in CLARC / clean architecture](#how-it-fits-in-clarc--clean-architecture)
+- [Capabilities](#capabilities)
+- [API documentation](#api-documentation)
+- [Examples](#examples)
+- [Namespaces](#namespaces)
+- [Upgrading](#upgrading)
+- [Contributing](#contributing)
+- [Community](#community)
+- [License](#license)
+- [Links](#links)
 
-- .NET 9.0 or later
-- ASP.NET Core (for dependency injection integration)
-- Entity Framework Core (for repository implementations – not included)
+---
 
-### Installation
+## About
 
-The library is published as a NuGet package (example – replace with actual feed):
+**Odex.AspNetCore.Clarc.Domain** is part of the **CLARC** family of packages. It gives you shared types and interfaces so domain code stays consistent across solutions: typed aggregate roots, optional lifecycle state, composable query predicates (`Specification<T>`), lightweight **aggregate events** (raised in the domain, **dispatched** in your infrastructure), guard-style checks (`BasePolicy<T>`), and async repository contracts you implement against your chosen store.
+
+The package is **opinionated about structure, not about frameworks**. You wire **dependency injection**, **ORMs**, **outboxes**, and **mediators** in **Application** and **Infrastructure**—not in this library.
+
+---
+
+## Installation
 
 ```bash
 dotnet add package Odex.AspNetCore.Clarc.Domain
 ```
 
-Or use the Package Manager Console:
+Pin a version when you need a reproducible build:
 
 ```bash
-Install-Package Odex.AspNetCore.Clarc.Domain
+dotnet add package Odex.AspNetCore.Clarc.Domain --version 0.2.0
 ```
 
 ---
 
-## ✨ Features
+## Requirements
 
-| Feature                  | Description                                                                                       |
-|--------------------------|---------------------------------------------------------------------------------------------------|
-| 🧩 **BaseAggregate**     | `Id`, `CreatedAt`, `LastModifiedAt`, event collection (`ListEvents()`, `AddEvent()`).             |
-| 🔁 **StatefulAggregate** | Adds `IsActive` / `IsSoftDeleted` with `Activate()`, `Deactivate()`, `SoftDelete()`, `Restore()`. |
-| 📜 **Domain Events**     | `IDomainEvent` – auto‑generated GUID and timestamp.                                               |
-| ✅ **Policies**           | `RequireNotNull`, `RequireNotNullNorEmpty`, `RequireTrue/False`, etc.                             |
-| 📐 **Specifications**    | `And`, `Or`, `Not` combinators – works with EF Core.                                              |
-| 🗄️ **Repository**       | `IAggregateRepository<TEntity, TId>` with `Add`, `Update`, `Delete`, `FindById`, `ListAsync`.     |
-| 🔁 **Transactions**      | `ITransactionContext` + `ExecuteInTransactionAsync` – opt‑in rollback.                            |
-| ⚠️ **Domain Exceptions** | `DomainException` with `ExceptionType` enum (Concurrency, NotFound, etc.).                        |
-| 📦 **Value Objects**     | `BaseValueObject` + typed request/response records (`PagedRequest`, `PagedResponse`).             |
+| Item | Version |
+|------|---------|
+| **Target framework** | `net9.0` |
+| **.NET SDK** | 9.x (for development and consumption aligned with the target) |
+
+This library has **no NuGet dependencies** at runtime beyond the .NET runtime. The package build references **Microsoft.SourceLink.GitHub** (private asset) so consumers get GitHub-backed **source debugging** in supported IDEs. The same build emits **XML API documentation** for all public types and members (see [API documentation](#api-documentation)). Your **Infrastructure** project references EF Core, Dapper, or other stacks as needed.
+
+To build and test this repository locally, see **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
 ---
 
-## 🏗️ Core Components
+## How it fits in CLARC / clean architecture
 
-### 1. Aggregates
+| Layer | Responsibility | Typical CLARC package |
+|-------|----------------|------------------------|
+| **Domain** | Entities, value objects, domain services, invariants, aggregate events (raised, not dispatched) | **This package** |
+| **Application** | Use cases, commands/queries, handlers, orchestration | *Odex.AspNetCore.Clarc.Application* (your solution) |
+| **Infrastructure** | Persistence, external APIs, event dispatch, DI registrations | *Odex.AspNetCore.Clarc.Infrastructure* (your solution) |
+
+**Repository interfaces** (`IAggregateRepository<,>`) use `IQueryable` / `Expression<>` so implementations can translate predicates to SQL (for example with EF Core). That is a deliberate trade-off: the contract stays **persistence-oriented** while remaining **store-agnostic** at compile time.
+
+---
+
+## Capabilities
+
+| Area | Types (summary) |
+|------|------------------|
+| **Aggregates** | `BaseAggregate<TId>` — identity, audit timestamps, in-memory domain event list. `StatefulAggregate<TId>` — activation and soft-delete flags with timestamps. |
+| **Events** | `IAggregateEvent`, `AggregateEvent` — correlation id and `OccurredOn`; collect with `AddEvent`, read with `ListEvents`, clear after dispatch in infrastructure. |
+| **Specifications** | `Specification<T>` with `And` / `Or` / `Not`; `ToExpression()` for providers that compile LINQ expressions. |
+| **Policies** | `IBasePolicy<T>`, `BasePolicy<T>` — `RequireNotNull`, `RequireNotNullNorEmpty`, `RequireNullOrEmpty`, `RequireTrue` / `RequireFalse`, etc. |
+| **Repositories** | `IBaseRepository` — `SaveChangesAsync`, `ExecuteInTransactionAsync`. `IAggregateRepository<TEntity,TId>` — async reads/writes, includes, attach helpers. |
+| **Transactions** | `ITransactionContext` — cooperative rollback signalling for unit-of-work implementations. |
+| **Exceptions** | `DomainException`, `PolicyViolationException`, `EntityNotFoundException`, `ConcurrencyException`, `InvalidEntityStateException` with `ExceptionType`. |
+| **Value objects / DTO markers** | `BaseValueObject`, `BaseRequest`, `BaseResponse`, `PagedRequest`, `PagedResponse<T>`, `BaseData`. |
+
+---
+
+## API documentation
+
+The **public API** is documented with **XML Doc Comments** (`///` summaries, parameters, type parameters, return values, and documented exceptions where relevant). The project enables **`GenerateDocumentationFile`**, so each NuGet release ships **`Odex.AspNetCore.Clarc.Domain.xml`** next to the assembly. That file powers:
+
+- **IDE IntelliSense** (Visual Studio, Rider, VS Code with C# Dev Kit)
+- **NuGet.org** API reference and tooltips for consumers
+
+If you extend or change public types, keep documentation in sync; see **[CONTRIBUTING.md](CONTRIBUTING.md#xml-documentation-public-api)**.
+
+---
+
+## Examples
+
+### Aggregate and policy
 
 ```csharp
-public class MyAggregate : StatefulAggregate<Guid>
+public class Product : StatefulAggregate<Guid>
 {
-    public string Name { get; private set; }
+    public string Name { get; private set; } = string.Empty;
 
-    public void UpdateName(string newName)
+    public void Rename(string newName)
     {
-        // Use a policy to guard invariants
         var policy = new BasePolicy<string>();
         policy.RequireNotNullNorEmpty(newName);
-        
+
         Name = newName;
-        MarkModified();   // Updates LastModifiedAt
-        AddEvent(new NameChangedEvent(Id, newName));
+        MarkModified();
+        AddEvent(new ProductRenamedEvent(Id, newName));
     }
 }
 ```
 
-### 2. Policies (Guard Clauses)
+Define `ProductRenamedEvent` as a type implementing `IAggregateEvent` (or inheriting `AggregateEvent` with extra payload properties).
+
+### Specification
 
 ```csharp
-var policy = new BasePolicy<MyEntity>();
-policy.RequireNotNull(entity);
-policy.RequireTrue(entity.IsActive);
-policy.RequireNotNullNorEmpty(entity.Code);
-```
-
-### 3. Specifications
-
-```csharp
-public class ActiveUsersSpec : Specification<User>
+public sealed class ActiveUsersSpec : Specification<User>
 {
-    public override Expression<Func<User, bool>> ToExpression() 
+    public override Expression<Func<User, bool>> ToExpression()
         => u => u.IsActive;
 }
 
-// Usage
-var spec = new ActiveUsersSpec().And(new UserNameContainsSpec("john"));
-var users = await repository.ListAsync(spec.ToExpression());
+// Compose and pass the expression to your repository implementation
+var spec = new ActiveUsersSpec().And(new UserNameContainsSpec("alex"));
+await repository.ListAsync(spec.ToExpression(), cancellationToken);
 ```
 
-### 4. Repository Usage
+### Application service with `AggregateService`
+
+`AggregateService` depends on `IBaseRepository`. Your aggregate repository implementation should implement both `IAggregateRepository<T, TId>` and the same unit-of-work boundary as `IBaseRepository`.
 
 ```csharp
-public class ProductService : BaseService
+public sealed class ProductService(IAggregateRepository<Product, Guid> products)
+    : AggregateService(products)
 {
-    private readonly IAggregateRepository<Product, Guid> _productRepo;
-
-    public async Task<Product> CreateProduct(string name)
+    public async Task<Product> CreateAsync(string name, CancellationToken cancellationToken = default)
     {
         var product = new Product(name);
-        await _productRepo.AddAsync(product);
-        await SaveRepositoryChangesAsync();
+        await products.AddAsync(product, cancellationToken);
+        await SaveRepositoryChangesAsync(cancellationToken);
         return product;
     }
 }
 ```
 
-### 5. Transactions
+### Transaction boundary
 
 ```csharp
 await ExecuteInRepositoryTransactionAsync(async () =>
 {
-    await repo1.AddAsync(entityA);
-    await repo2.UpdateAsync(entityB);
-    return true;   // commits on success
-});
+    await repositoryA.AddAsync(entity, cancellationToken);
+    await repositoryB.UpdateAsync(other, cancellationToken);
+    return true;
+}, cancellationToken);
 ```
 
----
+Commit vs rollback semantics are defined by **your** `IBaseRepository` / infrastructure implementation.
 
-### Basic Configuration (DI)
+### Composition root (dependency injection)
 
-Register your repository and services in the `Program.cs` or `Infrastructure` layer:
+Register your implementations where the application starts (ASP.NET Core minimal API host, generic host, test fixture, etc.):
 
 ```csharp
-builder.Services.AddScoped<IMyRepository, MyRepository>();
-builder.Services.AddScoped<IMyService, MyService>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ProductService>();
 ```
 
 ---
 
-## 📂 Namespace Map
+## Namespaces
 
-| Namespace                                     | Purpose                                                                                                                                                                   |
-|-----------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `Odex.AspNetCore.Clarc.Domain.Aggregates`     | `BaseAggregate`, `StatefulAggregate`                                                                                                                                      |
-| `Odex.AspNetCore.Clarc.Domain.Constants`      | `ExceptionType` enum                                                                                                                                                      |
-| `Odex.AspNetCore.Clarc.Domain.Contexts`       | `ITransactionContext`                                                                                                                                                     |
-| `Odex.AspNetCore.Clarc.Domain.DTOs`           | `BaseData` marker                                                                                                                                                         |
-| `Odex.AspNetCore.Clarc.Domain.Events`         | `IAggregateEvent`, `AggregateEvent`                                                                                                                                       |
-| `Odex.AspNetCore.Clarc.Domain.Exceptions`     | `DomainException` (Base exception class), `ConcurrencyException`, `EntityNotFoundException`, `InvalidEntityStateException`, `PolicyViolationException`                    |
-| `Odex.AspNetCore.Clarc.Domain.Policies`       | `IBasePolicy<T>`, `BasePolicy<T>`                                                                                                                                         |
-| `Odex.AspNetCore.Clarc.Domain.Repositories`   | `IBaseRepository`, `IAggregateRepository`                                                                                                                                 |
-| `Odex.AspNetCore.Clarc.Domain.Services`       | `IBaseService`, `BaseService`, `IAggregateService` , `AggregateService`                                                                                                   |
-| `Odex.AspNetCore.Clarc.Domain.Specifications` | `Specification` (Base specification class), `AndSpecification`, `NotSpecification`, `OrSpecification`, `ReplaceParameterVisitor`                                          |
-| `Odex.AspNetCore.Clarc.Domain.ValueObjects`   | `BaseValueObject` (Base value object class. Mostly used as marker), `Requests.BaseRequests`, `Requests.PagedRequest`, `Responses.BaseResponse`, `Responses.PagedResponse` |
-
----
-
-## 🧪 Example: Soft‑Delete & Restore
-
-```csharp
-public class Customer : StatefulAggregate<int>
-{
-    public string Email { get; private set; }
-
-    public void DeleteCustomer()
-    {
-        SoftDelete();   // sets IsSoftDeleted = true, SoftDeletedAt = now
-        AddEvent(new CustomerSoftDeletedEvent(Id));
-    }
-
-    public void Reinstate()
-    {
-        Restore();      // sets IsSoftDeleted = false, RestoredAt = now
-        AddEvent(new CustomerRestoredEvent(Id));
-    }
-}
-```
+| Namespace | Role |
+|-----------|------|
+| `Odex.AspNetCore.Clarc.Domain.Aggregates` | `BaseAggregate<>`, `StatefulAggregate<>` |
+| `Odex.AspNetCore.Clarc.Domain.Constants` | `ExceptionType` |
+| `Odex.AspNetCore.Clarc.Domain.Contexts` | `ITransactionContext` |
+| `Odex.AspNetCore.Clarc.Domain.DTOs` | `BaseData` marker |
+| `Odex.AspNetCore.Clarc.Domain.Events` | `IAggregateEvent`, `AggregateEvent` |
+| `Odex.AspNetCore.Clarc.Domain.Exceptions` | Domain exception hierarchy |
+| `Odex.AspNetCore.Clarc.Domain.Policies` | `IBasePolicy<>`, `BasePolicy<>` |
+| `Odex.AspNetCore.Clarc.Domain.Repositories` | `IBaseRepository`, `IAggregateRepository<,>` |
+| `Odex.AspNetCore.Clarc.Domain.Services` | `IBaseService`, `BaseService`, `IAggregateService`, `AggregateService` |
+| `Odex.AspNetCore.Clarc.Domain.Specifications` | `Specification<>`, combinators, `ReplaceParameterVisitor` |
+| `Odex.AspNetCore.Clarc.Domain.ValueObjects` | `BaseValueObject`; `Requests` / `Responses` (e.g. `PagedRequest`, `PagedResponse<>`) |
 
 ---
 
-## 🤝 Contributing
+## Upgrading
 
-Contributions are welcome! Please follow the standard GitHub flow:
+See the **[changelog](https://github.com/o-shabi/odex-clarc-domain-aspnetcore/blob/main/CHANGELOG.md)** for version history and **breaking changes**. A copy also lives at the repository root as `CHANGELOG.md` for forks and offline docs.
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+**0.1.x → 0.2.0 (summary):**
 
-Make sure to include tests for new functionality.
+- `DeleteByAccessIdAsync` was removed from `IAggregateRepository<,>`.
+- Read methods that accept `includeBuilder` gained an optional trailing `CancellationToken`.
 
 ---
 
-## 📄 License
+## Contributing
 
-This project is licensed under the **MIT License** – see the [LICENSE](LICENSE) file for details.
+See **[CONTRIBUTING.md](CONTRIBUTING.md)** for setup, pull-request expectations, and versioning notes.
 
 ---
 
-*Built with ❤️ for clean DDD architectures on ASP.NET Core*
+## Community
+
+- **[Code of Conduct](CODE_OF_CONDUCT.md)** — expected behavior in issues and pull requests.
+- **[Security policy](SECURITY.md)** — how to report vulnerabilities responsibly.
+
+---
+
+## License
+
+This project is released under the [MIT License](LICENSE).
+
+Copyright (c) Asen O'Shabi.
+
+---
+
+## Links
+
+| Resource | URL |
+|----------|-----|
+| NuGet Gallery | https://www.nuget.org/packages/Odex.AspNetCore.Clarc.Domain |
+| Changelog | https://github.com/o-shabi/odex-clarc-domain-aspnetcore/blob/main/CHANGELOG.md |
+| Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) (includes [XML documentation for contributors](CONTRIBUTING.md#xml-documentation-public-api)) |
+| Security | [SECURITY.md](SECURITY.md) |
+| Source / issues | https://github.com/o-shabi/odex-clarc-domain-aspnetcore |
