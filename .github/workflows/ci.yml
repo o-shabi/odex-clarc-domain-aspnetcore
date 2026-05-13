@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore
+        run: dotnet restore Odex.AspNetCore.Clarc.Domain.sln
+
+      - name: Build
+        run: >
+          dotnet build Odex.AspNetCore.Clarc.Domain.sln
+          -c Release
+          --no-restore
+          -p:ContinuousIntegrationBuild=true
+
+      - name: Test
+        run: >
+          dotnet test Odex.AspNetCore.Clarc.Domain.sln
+          -c Release
+          --no-build
+          --verbosity normal
+
+      - name: Pack (verify nupkg)
+        run: >
+          dotnet pack Odex.AspNetCore.Clarc.Domain/Odex.AspNetCore.Clarc.Domain.csproj
+          -c Release
+          --no-build
+          -o artifacts
+
+      - name: Upload package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: artifacts/*.nupkg
