@@ -1,0 +1,106 @@
+# Step 2 — Continuous Deployment (CD)
+# Publishes the library package to NuGet.org when:
+#   A) You push a Git version tag like v0.3.0, or
+#   B) You run this workflow manually (workflow_dispatch) and enter a SemVer version.
+#
+# Required repository secret: NUGET_API_KEY (see CONTRIBUTING.md → CI/CD).
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "SemVer to publish (e.g. 0.3.0) — must match what you want on NuGet"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Resolve package version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            VER="${{ github.event.inputs.version }}"
+          else
+            REF="${GITHUB_REF_NAME}"
+            VER="${REF#v}"
+          fi
+          if [[ ! "$VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            echo "Invalid version: $VER (expected SemVer like 0.3.0)"
+            exit 1
+          fi
+          echo "pkg_version=$VER" >> "$GITHUB_OUTPUT"
+          echo "Publishing version: $VER"
+
+      - name: Restore
+        run: dotnet restore Odex.AspNetCore.Clarc.Domain.sln
+
+      - name: Build
+        run: >
+          dotnet build Odex.AspNetCore.Clarc.Domain.sln
+          -c Release
+          --no-restore
+          -p:ContinuousIntegrationBuild=true
+          -p:TreatWarningsAsErrors=true
+          -p:Version=${{ steps.version.outputs.pkg_version }}
+          -p:PackageVersion=${{ steps.version.outputs.pkg_version }}
+
+      - name: Test
+        run: >
+          dotnet test Odex.AspNetCore.Clarc.Domain.sln
+          -c Release
+          --no-build
+          --verbosity normal
+
+      - name: Pack
+        run: >
+          dotnet pack Odex.AspNetCore.Clarc.Domain/Odex.AspNetCore.Clarc.Domain.csproj
+          -c Release
+          --no-build
+          -o artifacts
+          -p:PackageVersion=${{ steps.version.outputs.pkg_version }}
+          -p:Version=${{ steps.version.outputs.pkg_version }}
+
+      - name: Push to NuGet.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${NUGET_API_KEY:-}" ]]; then
+            echo "NUGET_API_KEY is not set. Add it under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          dotnet nuget push artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          shopt -s nullglob
+          for f in artifacts/*.snupkg; do
+            dotnet nuget push "$f" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          done
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ steps.version.outputs.pkg_version }}
+          path: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg

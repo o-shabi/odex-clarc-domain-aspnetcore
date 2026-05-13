@@ -1,3 +1,7 @@
+# Step 1 — Continuous Integration (CI)
+# Runs on every push and PR to main: restore → build (strict) → test → pack → upload artifacts.
+# Does NOT publish to NuGet (that is Step 2 — release.yml).
+
 name: CI
 
 on:
@@ -6,11 +10,15 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
-  build:
+  build-test-pack:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -26,12 +34,13 @@ jobs:
       - name: Restore
         run: dotnet restore Odex.AspNetCore.Clarc.Domain.sln
 
-      - name: Build
+      - name: Build (Release, warnings as errors)
         run: >
           dotnet build Odex.AspNetCore.Clarc.Domain.sln
           -c Release
           --no-restore
           -p:ContinuousIntegrationBuild=true
+          -p:TreatWarningsAsErrors=true
 
       - name: Test
         run: >
@@ -40,15 +49,18 @@ jobs:
           --no-build
           --verbosity normal
 
-      - name: Pack (verify nupkg)
+      - name: Pack (verify NuGet layout)
         run: >
           dotnet pack Odex.AspNetCore.Clarc.Domain/Odex.AspNetCore.Clarc.Domain.csproj
           -c Release
           --no-build
           -o artifacts
 
-      - name: Upload package artifacts
+      - name: Upload NuGet packages
         uses: actions/upload-artifact@v4
         with:
-          name: nuget-package
-          path: artifacts/*.nupkg
+          name: nuget-packages
+          path: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg
+          if-no-files-found: error

@@ -15,9 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Issue templates (bug report, feature request) and **pull request template**.
 - **Directory.Build.props** and **.editorconfig** for consistent SDK and C# style defaults.
 - **Microsoft.SourceLink.GitHub** and repository metadata on the package (`PublishRepositoryUrl`, `RepositoryType`, `PackageReleaseNotes`, `Copyright`, `Title`).
+- **CD workflow** `.github/workflows/release.yml`: publish to NuGet on **`v*.*.*`** tags or **manual** `workflow_dispatch` with a SemVer input; requires repo secret **`NUGET_API_KEY`**.
 
 ### Changed
 
+- **CI workflow** `.github/workflows/ci.yml`: concurrency group (cancel stale runs), **warnings as errors** on Release build, upload both **`.nupkg`** and **`.snupkg`** artifacts.
 - **API documentation:** Full **XML Doc Comment** coverage for all **public** types and members in `Odex.AspNetCore.Clarc.Domain` (standard `///` blocks: summaries plus `param`, `typeparam`, `returns`, and `exception` where applicable). The shipped **`Odex.AspNetCore.Clarc.Domain.xml`** now matches the public surface, clearing **CS1591** when strict documentation warnings are enabled.
 
 ## [0.2.0] - 2026-05-12

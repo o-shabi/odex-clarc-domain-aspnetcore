@@ -62,6 +62,45 @@ Private implementation details do not require public XML comments.
 
 This project uses [Semantic Versioning](https://semver.org/). Breaking changes belong in a **major** bump (or in **0.x** as coordinated minor bumps per your policy). Prefer additive changes and obsolescence with a migration period when practical.
 
+## CI/CD (GitHub Actions)
+
+This repository uses two workflows under [`.github/workflows/`](.github/workflows/).
+
+### CI — `ci.yml` (continuous integration)
+
+**When it runs:** every **push** and **pull request** targeting `main`.
+
+**What it does:**
+
+1. **`dotnet restore`** on the solution  
+2. **`dotnet build`** — `Release`, `ContinuousIntegrationBuild=true`, **`TreatWarningsAsErrors=true`** (same bar as a strict local build)  
+3. **`dotnet test`** — same configuration, `--no-build`  
+4. **`dotnet pack`** — verifies the NuGet layout; uploads **`*.nupkg`** and **`*.snupkg`** as workflow artifacts (download from the Actions run)
+
+**Concurrency:** new runs for the same PR/branch cancel older in-progress runs so you do not queue redundant work.
+
+### CD — `release.yml` (continuous deployment to NuGet)
+
+**When it runs:**
+
+| Trigger | How |
+|--------|-----|
+| **Git tag** | Push a tag matching `v1.2.3` (leading `v`, then SemVer). Example: `git tag v0.3.0 && git push origin v0.3.0` |
+| **Manual** | GitHub → **Actions** → **Release** → **Run workflow** → enter version **`0.3.0`** (no `v` prefix) |
+
+The workflow sets MSBuild **`Version`** and **`PackageVersion`** from that value, then build → test → pack → **`dotnet nuget push`** to **https://api.nuget.org/v3/index.json** with `--skip-duplicate`.
+
+**One-time setup**
+
+1. On [NuGet.org](https://www.nuget.org/), create an **API key** with permission to **push** this package ID.  
+2. In the GitHub repo: **Settings → Secrets and variables → Actions → New repository secret**  
+   - Name: **`NUGET_API_KEY`**  
+   - Value: the key from NuGet  
+
+Forks will not have your secret; the push step fails fast if the secret is missing.
+
+**Optional (later):** add a GitHub **Environment** named `nuget` with required reviewers, and set `environment: nuget` on the publish job in `release.yml` for a manual approval gate before push.
+
 ## Code of conduct
 
 Participation is governed by the [Code of Conduct](CODE_OF_CONDUCT.md). Be respectful and constructive.

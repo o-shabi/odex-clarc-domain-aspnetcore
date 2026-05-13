@@ -20,6 +20,7 @@ Reusable **domain-layer** building blocks for **.NET**: aggregates, domain event
 - [Examples](#examples)
 - [Namespaces](#namespaces)
 - [Upgrading](#upgrading)
+- [CI/CD](#cicd)
 - [Contributing](#contributing)
 - [Community](#community)
 - [License](#license)
@@ -205,6 +206,15 @@ See the **[changelog](https://github.com/o-shabi/odex-clarc-domain-aspnetcore/bl
 
 - `DeleteByAccessIdAsync` was removed from `IAggregateRepository<,>`.
 - Read methods that accept `includeBuilder` gained an optional trailing `CancellationToken`.
+
+---
+
+## CI/CD
+
+| Workflow | File | Purpose |
+|----------|------|---------|
+| **CI** | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | On every PR/push to `main`: restore, **Release** build with **warnings as errors**, test, pack; uploads **`.nupkg`** and **`.snupkg`** artifacts. |
+| **Release** | [`.github/workflows/release.yml`](.github/workflows/release.yml) | Pushes a version to **NuGet.org** when you push a tag `v*.*.*` or run the workflow manually (see **[CONTRIBUTING.md — CI/CD](CONTRIBUTING.md#cicd-github-actions)** for **`NUGET_API_KEY`** setup). |
 
 ---
 
