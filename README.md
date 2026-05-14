@@ -3,6 +3,7 @@
 [![NuGet](https://img.shields.io/nuget/v/Odex.AspNetCore.Clarc.Domain)](https://www.nuget.org/packages/Odex.AspNetCore.Clarc.Domain)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Odex.AspNetCore.Clarc.Domain)](https://www.nuget.org/packages/Odex.AspNetCore.Clarc.Domain)
 [![CI](https://github.com/o-shabi/odex-clarc-domain-aspnetcore/actions/workflows/ci.yml/badge.svg)](https://github.com/o-shabi/odex-clarc-domain-aspnetcore/actions/workflows/ci.yml)
+[![Release](https://github.com/o-shabi/odex-clarc-domain-aspnetcore/actions/workflows/release.yml/badge.svg)](https://github.com/o-shabi/odex-clarc-domain-aspnetcore/actions/workflows/release.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Reusable **domain-layer** building blocks for **.NET**: aggregates, domain events, specifications, guard policies, persistence-oriented repository contracts, and transaction abstractions. The **public API is fully documented** with XML comments for IntelliSense and NuGet. **No ASP.NET Core or EF Core dependency**—this assembly targets plain `net9.0` so you can use it from any host or stack.
